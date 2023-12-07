@@ -22,7 +22,7 @@ public class RedisSinkConnectorConfig extends AbstractConfig {
                 .define(REDIS_URI,
                         ConfigDef.Type.STRING,
                         ConfigDef.Importance.HIGH,
-                        "")
+                        "Redis URI or Redis cluster node URIs, separated by semicolon (';')")
                 .define(REDIS_CLUSTER,
                         ConfigDef.Type.BOOLEAN,
                         ConfigDef.Importance.MEDIUM,
