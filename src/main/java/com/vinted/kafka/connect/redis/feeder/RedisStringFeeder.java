@@ -25,19 +25,19 @@ public class RedisStringFeeder implements IFeeder {
 
     @Override
     public void feed(Collection<SinkRecord> collection) {
-        var pipeline = redis.pipelined();
+        PipelineBase pipeline = redis.pipelined();
         collection.forEach(record -> set(pipeline, record));
     }
 
     private void set(PipelineBase redis, SinkRecord record) {
-        var key = keyConverter.convert(record);
-        var value = valueConverter.convert(record);
-        var params = getSetParams();
+        String key = keyConverter.convert(record);
+        String value = valueConverter.convert(record);
+        SetParams params = getSetParams();
         redis.set(key, value, params);
     }
 
     private SetParams getSetParams() {
-        var params = new SetParams();
+        SetParams params = new SetParams();
         // TODO : add expiration
         return params;
     }

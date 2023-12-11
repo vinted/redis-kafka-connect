@@ -15,6 +15,7 @@ import redis.clients.jedis.UnifiedJedis;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RedisSinkTask extends SinkTask {
@@ -68,13 +69,13 @@ public class RedisSinkTask extends SinkTask {
 
     private UnifiedJedis initRedis() {
         if (isRedisCluster) {
-            var clusterNodes = Arrays.stream(redisUri.split(";"))
+            Set<HostAndPort> clusterNodes = Arrays.stream(redisUri.split(";"))
                     .map(c -> c.split(":"))
                     .map(c -> new HostAndPort(c[0], Integer.parseInt(c[1])))
                     .collect(Collectors.toSet());
             return new JedisCluster(clusterNodes);
         } else {
-            var redisUriSplit = redisUri.split(":");
+            String[] redisUriSplit = redisUri.split(":");
             return new JedisPooled(redisUriSplit[0], Integer.parseInt(redisUriSplit[1]));
         }
     }

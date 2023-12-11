@@ -31,9 +31,15 @@ public class KeyConverter {
             throw new RedisSinkConnectorException("Java class " + key.getClass() + " does not have corresponding schema type.");
         }
 
-        return switch (schemaType) {
-            case INT8, INT16, INT32, INT64, STRING -> String.valueOf(key);
-            default -> throw new RedisSinkConnectorException(schemaType.name() + " is not supported as the document id.");
-        };
+        switch (schemaType) {
+            case INT8:
+            case INT16:
+            case INT32:
+            case INT64:
+            case STRING:
+                return String.valueOf(key);
+            default:
+                throw new RedisSinkConnectorException(schemaType.name() + " is not supported as the document id.");
+        }
     }
 }

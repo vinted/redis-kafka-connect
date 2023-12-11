@@ -4,14 +4,19 @@ plugins {
 
 group = 'com.vinted'
 version = '1.0-SNAPSHOT'
+sourceCompatibility        = 1.8
+targetCompatibility        = 1.8
+//testSourceCompatibility    = 11
+//testTargetCompatibility    = 11
+//reproducibleBuild          = true
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'org.apache.kafka:connect-api:2.8.2'
-    implementation 'org.apache.kafka:connect-json:2.8.2'
+    compileOnly 'org.apache.kafka:connect-api:2.8.2'
+    compileOnly 'org.apache.kafka:connect-json:2.8.2'
     implementation 'com.github.jcustenborder.kafka.connect:connect-utils:0.7.177'
     implementation 'redis.clients:jedis:5.0.0'
 
@@ -21,4 +26,12 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Connector-Class': 'com.vinted.kafka.connect.redis.RedisSinkConnector',
+        )
+    }
 }
