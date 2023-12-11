@@ -54,7 +54,10 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
 
   connect:
-    image: vinted/simple-redis-kafka-connect
+    image: vinted/redis-kafka-connect
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     hostname: connect
     container_name: connect
     depends_on:

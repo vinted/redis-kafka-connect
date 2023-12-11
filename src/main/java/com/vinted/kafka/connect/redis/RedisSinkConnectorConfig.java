@@ -25,18 +25,22 @@ public class RedisSinkConnectorConfig extends AbstractConfig {
                         "Redis URI or Redis cluster node URIs, separated by semicolon (';')")
                 .define(REDIS_CLUSTER,
                         ConfigDef.Type.BOOLEAN,
+                        false,
                         ConfigDef.Importance.MEDIUM,
                         "Whitelist of object key prefixes")
                 .define(REDIS_TYPE,
                         ConfigDef.Type.STRING,
+                        "string",
                         ConfigDef.Importance.HIGH,
                         "Whitelist of object key prefixes")
                 .define(REDIS_KEY,
                         ConfigDef.Type.STRING,
+                        "",
                         ConfigDef.Importance.LOW,
                         "Name of Kafka topic to produce to")
                 .define(REDIS_CONNECT_TIMEOUT,
                         ConfigDef.Type.INT,
+                        10000,
                         ConfigDef.Importance.LOW,
                         "Name of Kafka topic to produce to");
     }

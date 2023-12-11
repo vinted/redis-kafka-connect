@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id("com.palantir.docker") version "0.35.0"
 }
 
 group = 'com.vinted'
@@ -17,7 +19,8 @@ repositories {
 dependencies {
     compileOnly 'org.apache.kafka:connect-api:2.8.2'
     compileOnly 'org.apache.kafka:connect-json:2.8.2'
-    implementation 'com.github.jcustenborder.kafka.connect:connect-utils:0.7.177'
+//    implementation 'com.github.jcustenborder.kafka.connect:connect-utils:0.7.177'
+    implementation 'com.google.guava:guava:32.1.3-jre'
     implementation 'redis.clients:jedis:5.0.0'
 
     testImplementation platform('org.junit:junit-bom:5.9.1')
@@ -34,4 +37,55 @@ jar {
                 'Connector-Class': 'com.vinted.kafka.connect.redis.RedisSinkConnector',
         )
     }
+}
+
+docker {
+    name 'vinted/redis-kafka-connect:version'
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+tasks.named('shadowJar', ShadowJar) {
+    enableRelocation true
+    relocationPrefix "com.vinted.kafka.connect.redis"
+}
+
+def archiveFilename = "vinted-redis-kafka-connect"
+def releaseDate = DateTimeFormatter.ISO_LOCAL_DATE.format(LocalDateTime.now())
+
+tasks.register('prepareConfluentArchive', Copy) {
+    group = "Confluent"
+    description = "Prepares the Confluent archive file for Confluent Hub"
+    dependsOn tasks.shadowJar
+
+    def baseDir = "$archiveFilename-${project.version}"
+    from('src/config/archive/manifest.json') {
+        expand(projectVersion: "${project.version}", releaseDate: "${releaseDate}")
+    }
+    from('src/config/archive/assets') {
+        into 'assets'
+    }
+    from(layout.buildDirectory.dir('libs')) {
+        include "${project.name}-${project.version}-all.jar"
+        into 'lib'
+    }
+    from('../..') {
+        include 'README.md'
+        include 'LICENSE'
+        into 'doc'
+    }
+    into layout.buildDirectory.dir("confluentArchive/${baseDir}")
+}
+
+tasks.register('createConfluentArchive', Zip) {
+    group = "Confluent"
+    description = "Creates the Confluent archive file to be released to Confluent Hub"
+    dependsOn tasks.prepareConfluentArchive
+    from(layout.buildDirectory.dir('confluentArchive'))
+    archiveBaseName = ""
+    archiveAppendix = archiveFilename
+    archiveVersion.set(project.version.toString())
+    destinationDirectory = layout.buildDirectory.dir('confluent')
 }

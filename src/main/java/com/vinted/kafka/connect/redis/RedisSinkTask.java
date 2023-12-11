@@ -37,6 +37,7 @@ public class RedisSinkTask extends SinkTask {
     @Override
     public void start(Map<String, String> props) {
         this.props = props;
+        // TODO use RedisSinkConnectorConfig
         this.redisUri = props.get(RedisSinkConnectorConfig.REDIS_URI);
         this.isRedisCluster = "true".equals(props.get(RedisSinkConnectorConfig.REDIS_CLUSTER));
         this.redisType = props.get(RedisSinkConnectorConfig.REDIS_TYPE);
@@ -76,12 +77,14 @@ public class RedisSinkTask extends SinkTask {
             return new JedisCluster(clusterNodes);
         } else {
             String[] redisUriSplit = redisUri.split(":");
-            return new JedisPooled(redisUriSplit[0], Integer.parseInt(redisUriSplit[1]));
+            String host = redisUriSplit[0];
+            int port = Integer.parseInt(redisUriSplit[1]);
+            return new JedisPooled(host, port);
         }
     }
 
     private IFeeder initFeeder() {
-        if (redisType.equals("string")) {
+        if ("string".equals(redisType)) {
             return new RedisStringFeeder(redis, props);
         }
         throw new RedisSinkConnectorException("Unsupported redis sink type: " + this.redisType);

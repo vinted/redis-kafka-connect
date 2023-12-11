@@ -6,18 +6,14 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.source.SourceConnector;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RedisSinkConnector extends SourceConnector {
-
-    private RedisSinkConnectorConfig connectorConfig;
+    private Map<String, String> props;
 
     @Override
     public void start(Map<String, String> props) {
-        this.connectorConfig = new RedisSinkConnectorConfig(props);
+        this.props = props;
     }
 
     @Override
@@ -27,15 +23,7 @@ public class RedisSinkConnector extends SourceConnector {
 
     @Override
     public List<Map<String, String>> taskConfigs(int maxTasks) {
-        final List<Map<String, String>> taskConfigs = new ArrayList<>(maxTasks);
-
-        final Map<String, String> configs = this.connectorConfig.originalsStrings();
-
-        for (int i = 0; i < maxTasks; i++) {
-            taskConfigs.add(new HashMap<>(configs));
-        }
-
-        return ImmutableList.copyOf(taskConfigs);
+        return Collections.nCopies(maxTasks, props);
     }
 
     @Override
@@ -45,7 +33,7 @@ public class RedisSinkConnector extends SourceConnector {
 
     @Override
     public ConfigDef config() {
-        return null;
+        return RedisSinkConnectorConfig.configDef();
     }
 
     @Override
