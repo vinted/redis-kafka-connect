@@ -21,7 +21,7 @@ public class RedisStringFeeder implements IFeeder {
     public RedisStringFeeder(UnifiedJedis redis, RedisSinkConnectorConfig config) {
         this.config = config;
         this.valueConverter = new ValueConverter();
-        this.keyConverter = new KeyConverter();
+        this.keyConverter = new KeyConverter(config);
         this.redis = redis;
     }
 

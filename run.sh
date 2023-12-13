@@ -76,36 +76,46 @@ curl -X POST -H "Content-Type: application/json" --data '
 
 sleep 5
 
-echo -e "\nAdding Redis Kafka Sink Connector for the 'pageviews' topic into the 'pageviews' stream:"
+echo -e "\nAdding Redis Kafka Sink Connector for the 'pageviews' topic into Redis:"
 curl -X POST -H "Content-Type: application/json" --data '
-  {"name": "redis-sink",
-   "config": {
-     "connector.class": "com.vinted.kafka.connect.redis.RedisSinkConnector",
-     "tasks.max": "1",
-     "topics": "pageviews",
-     "redis.uri": "redis:6379",
-     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-     "value.converter.schemas.enable": "false"
-}}' http://localhost:8083/connectors -w "\n"
+  {
+      "name": "redis-sink",
+      "config": {
+          "connector.class": "com.vinted.kafka.connect.redis.RedisSinkConnector",
+          "tasks.max": "5",
+          "topics": "pageviews",
+          "redis.uri": "redis:6379",
+          "redis.cluster": false,
+          "redis.type": "string",
+          "redis.key": "",
+          "redis.socket.connect.timeout.ms": 10000,
+          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "value.converter.schemas.enable": "false"
+      }
+  }' http://localhost:8083/connectors -w "\n"
 
 sleep 2
-echo -e "\nAdding Redis Kafka Sink Connector for the 'pageviews' topic into RedisJSON:"
+echo -e "\nAdding Redis Kafka Sink Connector for the 'pageviews' topic into Redis Cluster with TTL 250, prefixed 'unipoop:':"
 curl -X POST -H "Content-Type: application/json" --data '
-  {"name": "redis-sink-json",
-   "config": {
-     "connector.class": "com.vinted.kafka.connect.redis.RedisSinkConnector",
-     "tasks.max": "1",
-     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-     "redis.command": "JSONSET",
-     "redis.uri": "redis:6379",
-     "topics": "pageviews",
-     "transforms": "Cast",
-     "transforms.Cast.spec": "string",
-     "transforms.Cast.type": "org.apache.kafka.connect.transforms.Cast$Key",
-     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-     "value.converter.schemas.enable": "false"
-}}' http://localhost:8083/connectors -w "\n"
+  {
+      "name": "redis-cluster-sink",
+      "config": {
+          "connector.class": "com.vinted.kafka.connect.redis.RedisSinkConnector",
+          "tasks.max": "5",
+          "topics": "pageviews",
+          "redis.uri": "redis-cluster:7000;redis-cluster:7001;redis-cluster:7002",
+          "redis.cluster": true,
+          "redis.pipelined": true,
+          "redis.type": "string",
+          "redis.key": "unipoop",
+          "redis.key.ttl": "250",
+          "redis.socket.connect.timeout.ms": 10000,
+          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "value.converter.schemas.enable": "false"
+      }
+  }' http://localhost:8083/connectors -w "\n"
 
 #sleep 2
 #echo -e "\nAdding Redis Kafka Source Connector for the 'mystream' stream:"
@@ -156,8 +166,8 @@ The `pageviews` stream in Redis should contain the sunk page views: redis-cli xl
 
 Examine the Redis database:
   - In your shell run: docker compose exec redis /opt/redis-stack/bin/redis-cli
+  - In your shell run: docker compose exec redis-cluster redis-cli -p 7001
   - List some RedisJSON keys: SCAN 0 TYPE ReJSON-RL
-  - Show the JSON value of a given key: JSON.GET pageviews:971
 ==============================================================================================================
 
 Use <ctrl>-c to quit'''

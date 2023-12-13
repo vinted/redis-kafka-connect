@@ -5,8 +5,15 @@ ARG CONNECT_IMAGE=cp-server-connect
 FROM openjdk:18-jdk-slim AS build
 WORKDIR /root/redis-kafka-connect
 VOLUME gradle-cache:/root/redis-kafka-connect/.gradle
+COPY gradle ./gradle
+COPY gradlew .
+COPY build.gradle .
+RUN ./gradlew
 COPY . .
 RUN ./gradlew createConfluentArchive
+
+FROM build AS test
+RUN ./gradlew test
 
 FROM $BASE_PREFIX/$CONNECT_IMAGE:$CP_VERSION
 

@@ -7,10 +7,7 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisPooled;
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,7 +60,7 @@ public class RedisSinkTask extends SinkTask {
                     .map(c -> c.split(":"))
                     .map(c -> new HostAndPort(c[0], Integer.parseInt(c[1])))
                     .collect(Collectors.toSet());
-            return new JedisCluster(clusterNodes);
+            return new JedisCluster(clusterNodes, config.getRedisTimeout());
         } else {
             String[] redisUriSplit = config.getRedisUri().split(":");
             String host = redisUriSplit[0];
