@@ -20,14 +20,9 @@ import java.util.stream.Collectors;
 
 public class RedisSinkTask extends SinkTask {
     private static final Logger log = LoggerFactory.getLogger(RedisSinkTask.class);
-    private String redisUri;
-    private boolean isRedisCluster;
-    private String redisType;
-//    private String redisKey;
-//    private int redisTimeout;
     private UnifiedJedis redis;
     private IFeeder feeder;
-    private Map<String, String> props;
+    private RedisSinkConnectorConfig config;
 
     @Override
     public String version() {
@@ -36,13 +31,7 @@ public class RedisSinkTask extends SinkTask {
 
     @Override
     public void start(Map<String, String> props) {
-        this.props = props;
-        // TODO use RedisSinkConnectorConfig
-        this.redisUri = props.get(RedisSinkConnectorConfig.REDIS_URI);
-        this.isRedisCluster = "true".equals(props.get(RedisSinkConnectorConfig.REDIS_CLUSTER));
-        this.redisType = props.get(RedisSinkConnectorConfig.REDIS_TYPE);
-//        this.redisKey = props.get(RedisSinkConnectorConfig.REDIS_KEY);
-//        this.redisTimeout = Integer.parseInt(props.get(RedisSinkConnectorConfig.REDIS_CONNECT_TIMEOUT));
+        this.config = new RedisSinkConnectorConfig(props);
         this.redis = initRedis();
         this.feeder = initFeeder();
     }
@@ -64,19 +53,19 @@ public class RedisSinkTask extends SinkTask {
             feeder.feed(collection);
         } catch (Exception e) {
             log.error("Error feeding records to Redis.", e);
-            throw new ConnectException(e);
+            throw new RedisSinkConnectorException("Error feeding records to Redis", e);
         }
     }
 
     private UnifiedJedis initRedis() {
-        if (isRedisCluster) {
-            Set<HostAndPort> clusterNodes = Arrays.stream(redisUri.split(";"))
+        if (config.isRedisCluster()) {
+            Set<HostAndPort> clusterNodes = Arrays.stream(config.getRedisUri().split(";"))
                     .map(c -> c.split(":"))
                     .map(c -> new HostAndPort(c[0], Integer.parseInt(c[1])))
                     .collect(Collectors.toSet());
             return new JedisCluster(clusterNodes);
         } else {
-            String[] redisUriSplit = redisUri.split(":");
+            String[] redisUriSplit = config.getRedisUri().split(":");
             String host = redisUriSplit[0];
             int port = Integer.parseInt(redisUriSplit[1]);
             return new JedisPooled(host, port);
@@ -84,9 +73,9 @@ public class RedisSinkTask extends SinkTask {
     }
 
     private IFeeder initFeeder() {
-        if ("string".equals(redisType)) {
-            return new RedisStringFeeder(redis, props);
+        if ("string".equals(config.getRedisType())) {
+            return new RedisStringFeeder(redis, config);
         }
-        throw new RedisSinkConnectorException("Unsupported redis sink type: " + this.redisType);
+        throw new RedisSinkConnectorException("Unsupported redis sink type: " + config.getRedisType());
     }
 }
