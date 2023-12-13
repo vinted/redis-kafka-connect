@@ -153,3 +153,11 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+
+  redis-cluster:
+    image: grokzen/redis-cluster:6.2.1
+    healthcheck:
+      test: [ CMD, redis-cli, --cluster, check, 0.0.0.0, '7000' ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
