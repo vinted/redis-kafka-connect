@@ -2,7 +2,9 @@ ARG CP_VERSION=7.2.0
 ARG BASE_PREFIX=confluentinc
 ARG CONNECT_IMAGE=cp-server-connect
 
-FROM container-registry.svc.vinted.com/proxy-docker-hub/openjdk:18-jdk-slim AS build
+FROM container-registry.svc.vinted.com/proxy-docker-hub/openjdk:18-jdk-slim AS base
+
+FROM base AS build
 WORKDIR /root/redis-kafka-connect
 VOLUME gradle-cache:/root/redis-kafka-connect/.gradle
 COPY gradle ./gradle
