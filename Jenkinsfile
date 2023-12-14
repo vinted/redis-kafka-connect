@@ -29,8 +29,8 @@ pipeline {
 static def agent() {
     [
         label: 'shared',
-        filename: 'Dockerfile',
-        args: '--add-host=host.docker.internal:host-gateway -v /var/run/docker.sock:/var/run/docker.sock:z -v $WORKSPACE:/app -v $JENKINS_HOME/workspace/git_repo_reference:$JENKINS_HOME/workspace/git_repo_reference --target base',
+        filename: 'Jenkins.Dockerfile',
+        args: '--add-host=host.docker.internal:host-gateway -v /var/run/docker.sock:/var/run/docker.sock:z -v $WORKSPACE:/app -v $JENKINS_HOME/workspace/git_repo_reference:$JENKINS_HOME/workspace/git_repo_reference',
         reuseNode: true,
     ]
 }
