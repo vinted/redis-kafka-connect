@@ -30,7 +30,7 @@ pipeline {
         }
         stage('Release') {
             steps {
-                sh './gradlew jreleaserRelease'
+                sh './gradlew jreleaserRelease --stacktrace'
             }
         }
     }
