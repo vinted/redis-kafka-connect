@@ -29,6 +29,9 @@ pipeline {
             }
         }
         stage('Release') {
+            when {
+                branch 'master'
+            }
             steps {
                 sh './gradlew jreleaserRelease --stacktrace'
             }
