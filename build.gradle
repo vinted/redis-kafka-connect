@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.vinted'
-version = '1.0-SNAPSHOT'
+version = '0.0.1'
 sourceCompatibility        = 1.8
 targetCompatibility        = 1.8
 //testSourceCompatibility    = 11
@@ -102,7 +102,7 @@ jreleaser {
 
     release {
         github {
-            overwrite = true
+            overwrite = false
             branch = 'master'
         }
     }
