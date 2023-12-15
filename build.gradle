@@ -106,7 +106,7 @@ jreleaser {
         }
     }
     distributions {
-        vinted-redis-kafka-connect {
+        "vinted-redis-kafka-connect" {
             artifact {
                 path = 'build/confluent/{{distributionName}}-{{projectVersion}}.zip'
             }
