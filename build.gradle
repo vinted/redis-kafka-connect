@@ -90,7 +90,6 @@ tasks.register('createConfluentArchive', Zip) {
     destinationDirectory = layout.buildDirectory.dir('confluent')
 }
 jreleaser {
-    dryrun = true
     project {
         authors = ['kjocevicius']
         license = 'MIT'
