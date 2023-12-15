@@ -2,6 +2,11 @@ pipeline {
     agent {
         dockerfile(agent())
     }
+    environment {
+        JRELEASER_GITHUB_TOKEN = credentials('github-jenkins-token')
+        CLOUDSMITH_TOKEN = credentials('cloudsmith-platform-api-token')
+        CLOUDSMITH_REPO = 'rubygems-hosted-backend'
+    }
     options {
         ansiColor('xterm')
         disableConcurrentBuilds(abortPrevious: true)
@@ -16,6 +21,11 @@ pipeline {
         stage('Test') {
             steps {
                 sh './gradlew test'
+            }
+        }
+        stage('Release') {
+            steps {
+                sh './gradlew jreleaserRelease'
             }
         }
         stage('Build') {
