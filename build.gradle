@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id("com.palantir.docker") version "0.35.0"
+    id 'org.jreleaser' version '1.9.0'
 }
 
 group = 'com.vinted'
@@ -19,7 +20,6 @@ repositories {
 dependencies {
     compileOnly 'org.apache.kafka:connect-api:2.8.2'
     compileOnly 'org.apache.kafka:connect-json:2.8.2'
-//    implementation 'com.github.jcustenborder.kafka.connect:connect-utils:0.7.177'
     implementation 'com.google.guava:guava:32.1.3-jre'
     implementation 'redis.clients:jedis:5.0.0'
 
@@ -88,4 +88,29 @@ tasks.register('createConfluentArchive', Zip) {
     archiveAppendix = archiveFilename
     archiveVersion.set(project.version.toString())
     destinationDirectory = layout.buildDirectory.dir('confluent')
+}
+jreleaser {
+    dryrun = true
+    project {
+        authors = ['kjocevicius']
+        license = 'MIT'
+        description = 'Simple Redis sink connector for Kafka Connect'
+        links {
+            homepage = 'https://github.com/vinted/redis-kafka-connect'
+        }
+        inceptionYear = '2023'
+    }
+
+    release {
+        github {
+            overwrite = true
+        }
+    }
+    distributions {
+        "vinted-redis-kafka-connect" {
+            artifact {
+                path = 'build/confluent/{{distributionName}}-{{projectVersion}}.zip'
+            }
+        }
+    }
 }
