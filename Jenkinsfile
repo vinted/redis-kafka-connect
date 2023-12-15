@@ -23,14 +23,14 @@ pipeline {
                 sh './gradlew test'
             }
         }
-        stage('Release') {
-            steps {
-                sh './gradlew jreleaserRelease'
-            }
-        }
         stage('Build') {
             steps {
                 sh './gradlew createConfluentArchive'
+            }
+        }
+        stage('Release') {
+            steps {
+                sh './gradlew jreleaserRelease'
             }
         }
     }
