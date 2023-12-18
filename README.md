@@ -1,8 +1,14 @@
 # vinted-redis-kafka-connect
 
-A simple Redis Kafka connector. 
+A simple Redis Kafka connector.
+
+Supports:
+* SET
+* EXPIRE - as default key TTL
 
 ## Sample config
+
+For all properties see [config definitions](https://github.com/vinted/redis-kafka-connect/blob/main/src/main/java/com/vinted/kafka/connect/redis/RedisSinkConnectorConfig.java).
 
 ```json
 {
