@@ -1,0 +1,130 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id("com.palantir.docker") version "0.35.0"
+    id 'org.jreleaser' version '1.9.0'
+}
+
+group = 'com.vinted'
+version = '0.0.2'
+sourceCompatibility        = 1.8
+targetCompatibility        = 1.8
+//testSourceCompatibility    = 11
+//testTargetCompatibility    = 11
+//reproducibleBuild          = true
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'org.apache.kafka:connect-api:2.8.2'
+    compileOnly 'org.apache.kafka:connect-json:2.8.2'
+    implementation 'com.google.guava:guava:32.1.3-jre'
+    implementation 'redis.clients:jedis:5.0.0'
+
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Connector-Class': 'com.vinted.kafka.connect.redis.RedisSinkConnector',
+        )
+    }
+}
+
+docker {
+    name 'vinted/redis-kafka-connect:version'
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+tasks.named('shadowJar', ShadowJar) {
+    enableRelocation true
+    relocationPrefix "com.vinted.kafka.connect.redis"
+}
+
+def archiveFilename = "vinted-redis-kafka-connect"
+def releaseDate = DateTimeFormatter.ISO_LOCAL_DATE.format(LocalDateTime.now())
+
+tasks.register('prepareConfluentArchive', Copy) {
+    group = "Confluent"
+    description = "Prepares the Confluent archive file for Confluent Hub"
+    dependsOn tasks.shadowJar
+
+    def baseDir = "$archiveFilename-${project.version}"
+    from('src/config/archive/manifest.json') {
+        expand(projectVersion: "${project.version}", releaseDate: "${releaseDate}")
+    }
+    from('src/config/archive/assets') {
+        into 'assets'
+    }
+    from(layout.buildDirectory.dir('libs')) {
+        include "${project.name}-${project.version}-all.jar"
+        into 'lib'
+    }
+    from('../..') {
+        include 'README.md'
+        include 'LICENSE'
+        into 'doc'
+    }
+    into layout.buildDirectory.dir("confluentArchive/${baseDir}")
+}
+
+tasks.register('createConfluentArchive', Zip) {
+    group = "Confluent"
+    description = "Creates the Confluent archive file to be released to Confluent Hub"
+    dependsOn tasks.prepareConfluentArchive
+    from(layout.buildDirectory.dir('confluentArchive'))
+    archiveBaseName = ""
+    archiveAppendix = archiveFilename
+    archiveVersion.set(project.version.toString())
+    destinationDirectory = layout.buildDirectory.dir('confluent')
+}
+
+tasks.register('currentVersion') {
+    outputs.file('VERSION')
+    inputs.property('VERSION', project.version)
+
+    doLast {
+        println("Current version: " + project.version)
+        if (project.file('VERSION').exists()) {
+            project.file('VERSION').delete()
+        }
+        project.file('VERSION') << project.version
+    }
+}
+
+jreleaser {
+    project {
+        authors = ['kjocevicius']
+        license = 'MIT'
+        description = 'Simple Redis sink connector for Kafka Connect'
+        links {
+            homepage = 'https://github.com/vinted/redis-kafka-connect'
+        }
+        inceptionYear = '2023'
+    }
+
+    release {
+        github {
+            overwrite = true
+            branch = 'master'
+        }
+    }
+    distributions {
+        "vinted-redis-kafka-connect" {
+            artifact {
+                path = 'build/confluent/{{distributionName}}-{{projectVersion}}.zip'
+            }
+        }
+    }
+}

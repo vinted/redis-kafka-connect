@@ -1,0 +1,31 @@
+{
+  "name" : "redis-kafka-connect",
+  "version" : "${projectVersion}",
+  "title" : "Simple Redis Kafka Connector",
+  "description" : "Kafka Connector Sink by Vinted.",
+  "owner" : {
+    "username" : "vinted",
+    "name" : "Vinted",
+    "url" : "http://www.vinted.com"
+  },
+  "support" : {
+    "summary" : "Create an issue on Github where we provide support on a good faith effort basis.",
+    "url" : "https://github.com/vinted/todo",
+    "provider_name" : "Redis"
+  },
+  "tags" : [ "redis"],
+  "features" : {
+    "supported_encodings" : [ "any" ],
+    "single_message_transforms" : true,
+    "confluent_control_center_integration" : true,
+    "kafka_connect_api" : true
+  },
+  "docker_image" : { },
+  "license" : [{
+    "name" : "The Apache License, Version 2.0",
+    "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+  }],
+  "component_types" : [ "sink" ],
+  "requirements": ["Redis"],
+  "release_date": "${releaseDate}"
+}

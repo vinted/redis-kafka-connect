@@ -1,0 +1,64 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    - name: Test with Gradle
+      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+      with:
+        arguments: "test --stacktrace"
+    - name: Build Confluent Archive with Gradle
+      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+      with:
+        arguments: "createConfluentArchive --stacktrace"
+    - name: Collect version info
+      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+      with:
+        arguments: "currentVersion --stacktrace"
+    - name: Collect version info
+      if: ${{ github.ref == 'refs/heads/master' }}
+      run: |
+        echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+    - name: Upload files to a GitHub release
+      uses: svenstaro/upload-release-action@2.3.0
+      if: ${{ github.ref == 'refs/heads/master' }}
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: build/confluent/vinted-redis-kafka-connect-${{ steps.build.outputs.version }}.zip
+        tag: ${{ steps.build.outputs.version }}
+
+#    - name: Release with Gradle/JReleaser
+#      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+#      if: ${{ github.ref == 'refs/heads/master' }}
+#      env:
+#        JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      with:
+#        arguments: "jreleaserRelease --stacktrace"
