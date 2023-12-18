@@ -89,6 +89,13 @@ tasks.register('createConfluentArchive', Zip) {
     archiveVersion.set(project.version.toString())
     destinationDirectory = layout.buildDirectory.dir('confluent')
 }
+
+tasks.register('printVersion') {
+    doLast {
+        logger.lifecycle(project.version)
+    }
+}
+
 jreleaser {
     project {
         authors = ['kjocevicius']

@@ -31,17 +31,17 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
-    - name: Build with Gradle
+    - name: Test with Gradle
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       with:
         arguments: test
-    - name: Build with Gradle
+    - name: Build Confluent Archive with Gradle
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       with:
         arguments: createConfluentArchive
-    - name: Build with Gradle
+    - name: Release with Gradle/JReleaser
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       env:
         JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        arguments: jreleaserRelease
+        arguments: "jreleaserRelease --stacktrace"
