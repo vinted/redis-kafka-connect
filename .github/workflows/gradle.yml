@@ -43,6 +43,7 @@ jobs:
       if: ${{ github.ref == 'refs/heads/master' }}
       run: |
         ./gradlew currentVersion --stacktrace
+        cat VERSION
         echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
     - name: Upload files to a GitHub release
       uses: svenstaro/upload-release-action@2.3.0
