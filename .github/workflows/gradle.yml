@@ -46,7 +46,7 @@ jobs:
     - name: Collect version info
       if: ${{ github.ref == 'refs/heads/master' }}
       run: |
-        echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
+        echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
     - name: Upload files to a GitHub release
       uses: svenstaro/upload-release-action@2.3.0
       if: ${{ github.ref == 'refs/heads/master' }}

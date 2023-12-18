@@ -91,14 +91,15 @@ tasks.register('createConfluentArchive', Zip) {
 }
 
 tasks.register('currentVersion') {
-    outputs.file('.version')
-    inputs.property('version', project.version)
+    outputs.file('VERSION')
+    inputs.property('VERSION', project.version)
 
     doLast {
-        if (project.file('.version').exists()) {
-            project.file('.version').delete()
+        println("Current version: " + project.version)
+        if (project.file('VERSION').exists()) {
+            project.file('VERSION').delete()
         }
-        project.file('.version') << project.version
+        project.file('VERSION') << project.version
     }
 }
 
