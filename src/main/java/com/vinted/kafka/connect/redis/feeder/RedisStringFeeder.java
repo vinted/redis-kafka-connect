@@ -33,7 +33,12 @@ public class RedisStringFeeder implements IFeeder {
             collection.forEach(record -> {
                 String key = keyConverter.convert(record);
                 String value = valueConverter.convert(record);
-                set(key, value, params, pipeline);
+
+                if (value == null) {
+                    delete(key, pipeline);
+                } else {
+                    set(key, value, params, pipeline);
+                }
             });
         }
     }
@@ -43,6 +48,14 @@ public class RedisStringFeeder implements IFeeder {
             pipeline.set(key, value, params);
         } else {
             redis.set(key, value, params);
+        }
+    }
+
+    private void delete(String key, PipelineBase pipeline) {
+        if (pipeline != null) {
+            pipeline.expire(key, 1);
+        } else {
+            redis.expire(key, 1);
         }
     }
 
