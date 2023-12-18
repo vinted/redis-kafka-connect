@@ -90,9 +90,15 @@ tasks.register('createConfluentArchive', Zip) {
     destinationDirectory = layout.buildDirectory.dir('confluent')
 }
 
-tasks.register('printVersion') {
+tasks.register('currentVersion') {
+    outputs.file('.version')
+    inputs.property('version', project.version)
+
     doLast {
-        logger.lifecycle(project.version)
+        if (project.file('.version').exists()) {
+            project.file('.version').delete()
+        }
+        project.file('.version') << project.version
     }
 }
 
