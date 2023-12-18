@@ -38,7 +38,11 @@ jobs:
     - name: Build Confluent Archive with Gradle
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       with:
-        arguments: "createConfluentArchive currentVersion --stacktrace"
+        arguments: "createConfluentArchive --stacktrace"
+    - name: Collect version info
+      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+      with:
+        arguments: "currentVersion --stacktrace"
     - name: Collect version info
       if: ${{ github.ref == 'refs/heads/master' }}
       run: |
