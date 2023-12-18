@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.vinted'
-version = '0.0.2-SNAPSHOT'
+version = '0.0.2'
 sourceCompatibility        = 1.8
 targetCompatibility        = 1.8
 //testSourceCompatibility    = 11
@@ -111,13 +111,6 @@ jreleaser {
         github {
             overwrite = true
             branch = 'master'
-        }
-        beforeRelease {
-            // Check if the release already exists
-            if (gitHubService.releaseExists(project)) {
-                println("Release already exists. Exiting gracefully.")
-                System.exit(0)
-            }
         }
     }
     distributions {
