@@ -51,8 +51,8 @@ jobs:
       if: ${{ github.ref == 'refs/heads/master' }}
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ steps.version.outputs.version }}
         file: build/confluent/vinted-redis-kafka-connect-${{ steps.version.outputs.version }}.zip
-        tag: ${{ steps.build.outputs.version }}
 
 #    - name: Release with Gradle/JReleaser
 #      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
