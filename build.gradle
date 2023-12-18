@@ -99,7 +99,7 @@ jreleaser {
     release {
         github {
             overwrite = true
-            branch = 'master'
+            branch = 'main'
         }
     }
     distributions {
