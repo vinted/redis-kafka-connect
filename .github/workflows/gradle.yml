@@ -38,11 +38,23 @@ jobs:
     - name: Build Confluent Archive with Gradle
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       with:
-        arguments: "createConfluentArchive --stacktrace"
-    - name: Release with Gradle/JReleaser
-      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+        arguments: "createConfluentArchive currentVersion --stacktrace"
+    - name: Collect version info
       if: ${{ github.ref == 'refs/heads/master' }}
-      env:
-        JRELEASER_GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+      run: |
+        echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
+    - name: Upload files to a GitHub release
+      uses: svenstaro/upload-release-action@2.3.0
+      if: ${{ github.ref == 'refs/heads/master' }}
       with:
-        arguments: "jreleaserRelease --stacktrace"
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: build/confluent/vinted-redis-kafka-connect-${{ steps.build.outputs.version }}.zip
+        tag: ${{ steps.build.outputs.version }}
+
+#    - name: Release with Gradle/JReleaser
+#      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
+#      if: ${{ github.ref == 'refs/heads/master' }}
+#      env:
+#        JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      with:
+#        arguments: "jreleaserRelease --stacktrace"
