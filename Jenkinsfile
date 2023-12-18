@@ -4,8 +4,6 @@ pipeline {
     }
     environment {
         JRELEASER_GITHUB_TOKEN = credentials('github-jenkins-token')
-        CLOUDSMITH_TOKEN = credentials('cloudsmith-platform-api-token')
-        CLOUDSMITH_REPO = 'rubygems-hosted-backend'
     }
     options {
         ansiColor('xterm')
