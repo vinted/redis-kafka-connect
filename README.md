@@ -3,8 +3,18 @@
 A simple Redis Kafka connector.
 
 Supports:
-* SET
-* EXPIRE - as default key TTL
+* `SET`
+* `EXPIRE` - as default key TTL
+* `EXPIRE` - as async delete for keys with `null` value 
+
+## Installation
+
+```Dockerfile
+ARG vintedRedisVersion="0.0.4"
+
+RUN wget https://github.com/vinted/redis-kafka-connect/releases/download/v${vintedRedisVersion}/vinted-redis-kafka-connect-${vintedRedisVersion}.zip -O /tmp/vinted-redis-kafka-connect-${vintedRedisVersion}.zip -q && \
+    confluent-hub install /tmp/vinted-redis-kafka-connect-${vintedRedisVersion}.zip --component-dir /usr/share/confluent-hub-components/ --no-prompt && \
+```
 
 ## Sample config
 
