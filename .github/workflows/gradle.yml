@@ -39,7 +39,8 @@ jobs:
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
       with:
         arguments: "createConfluentArchive --stacktrace"
-    - name: Collect version info
+    - id: version
+      name: Collect version info
       if: ${{ github.ref == 'refs/heads/master' }}
       run: |
         ./gradlew currentVersion --stacktrace
@@ -50,7 +51,7 @@ jobs:
       if: ${{ github.ref == 'refs/heads/master' }}
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: build/confluent/vinted-redis-kafka-connect-${{ steps.build.outputs.version }}.zip
+        file: build/confluent/vinted-redis-kafka-connect-${{ steps.version.outputs.version }}.zip
         tag: ${{ steps.build.outputs.version }}
 
 #    - name: Release with Gradle/JReleaser
