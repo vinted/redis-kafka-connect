@@ -112,6 +112,13 @@ jreleaser {
             overwrite = true
             branch = 'master'
         }
+        beforeRelease {
+            // Check if the release already exists
+            if (gitHubService.releaseExists(project)) {
+                println("Release already exists. Exiting gracefully.")
+                System.exit(0)
+            }
+        }
     }
     distributions {
         "vinted-redis-kafka-connect" {
@@ -120,4 +127,5 @@ jreleaser {
             }
         }
     }
+    checkVersionBump = true
 }
