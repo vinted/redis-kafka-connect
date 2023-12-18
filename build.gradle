@@ -1,7 +1,6 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id("com.palantir.docker") version "0.35.0"
     id 'org.jreleaser' version '1.9.0'
 }
 
@@ -37,10 +36,6 @@ jar {
                 'Connector-Class': 'com.vinted.kafka.connect.redis.RedisSinkConnector',
         )
     }
-}
-
-docker {
-    name 'vinted/redis-kafka-connect:version'
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
@@ -88,19 +83,6 @@ tasks.register('createConfluentArchive', Zip) {
     archiveAppendix = archiveFilename
     archiveVersion.set(project.version.toString())
     destinationDirectory = layout.buildDirectory.dir('confluent')
-}
-
-tasks.register('currentVersion') {
-    outputs.file('VERSION')
-    inputs.property('VERSION', project.version)
-
-    doLast {
-        println("Current version: " + project.version)
-        if (project.file('VERSION').exists()) {
-            project.file('VERSION').delete()
-        }
-        project.file('VERSION') << project.version
-    }
 }
 
 jreleaser {
