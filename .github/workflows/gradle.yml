@@ -40,12 +40,9 @@ jobs:
       with:
         arguments: "createConfluentArchive --stacktrace"
     - name: Collect version info
-      uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25 # v2.6.0
-      with:
-        arguments: "currentVersion --stacktrace"
-    - name: Collect version info
       if: ${{ github.ref == 'refs/heads/master' }}
       run: |
+        ./gradlew currentVersion --stacktrace
         echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
     - name: Upload files to a GitHub release
       uses: svenstaro/upload-release-action@2.3.0
