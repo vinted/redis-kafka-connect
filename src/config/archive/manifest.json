@@ -22,8 +22,8 @@
   },
   "docker_image" : { },
   "license" : [{
-    "name" : "The Apache License, Version 2.0",
-    "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+    "name" : "MIT License",
+    "url" : "https://mit-license.org"
   }],
   "component_types" : [ "sink" ],
   "requirements": ["Redis"],
