@@ -1,8 +1,8 @@
 {
   "name" : "redis-kafka-connect",
   "version" : "${projectVersion}",
-  "title" : "Simple Redis Kafka Connector",
-  "description" : "Kafka Connector Sink by Vinted.",
+  "title" : "Vinted Redis Kafka Connector",
+  "description" : "Simple Redis Kafka Connector Sink by Vinted.",
   "owner" : {
     "username" : "vinted",
     "name" : "Vinted",
@@ -10,7 +10,7 @@
   },
   "support" : {
     "summary" : "Create an issue on Github where we provide support on a good faith effort basis.",
-    "url" : "https://github.com/vinted/todo",
+    "url" : "https://github.com/vinted/redis-kafka-connect",
     "provider_name" : "Redis"
   },
   "tags" : [ "redis"],
