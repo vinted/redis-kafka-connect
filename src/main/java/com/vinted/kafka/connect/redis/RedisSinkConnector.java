@@ -1,14 +1,13 @@
 package com.vinted.kafka.connect.redis;
 
 
-import com.google.common.collect.ImmutableList;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.Task;
-import org.apache.kafka.connect.source.SourceConnector;
+import org.apache.kafka.connect.sink.SinkConnector;
 
 import java.util.*;
 
-public class RedisSinkConnector extends SourceConnector {
+public class RedisSinkConnector extends SinkConnector {
     private Map<String, String> props;
 
     @Override
