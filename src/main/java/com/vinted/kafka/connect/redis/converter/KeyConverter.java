@@ -7,6 +7,8 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
 
+import java.nio.charset.StandardCharsets;
+
 public class KeyConverter {
 
     private final RedisSinkConnectorConfig config;
@@ -15,7 +17,7 @@ public class KeyConverter {
         this.config = config;
     }
 
-    public String convert(SinkRecord record) {
+    public byte[] convert(SinkRecord record) {
         Schema keySchema = record.keySchema();
         Object key = record.key();
 
@@ -40,6 +42,7 @@ public class KeyConverter {
         }
 
         String prefix = config.getRedisKeyPrefix();
+        String result = "";
 
         switch (schemaType) {
             case INT8:
@@ -47,9 +50,12 @@ public class KeyConverter {
             case INT32:
             case INT64:
             case STRING:
-                return prefix + key;
+                result = prefix + key;
+                break;
             default:
                 throw new RedisSinkConnectorException(schemaType.name() + " is not supported as the document id.");
         }
+
+        return result.getBytes(StandardCharsets.UTF_8);
     }
 }
