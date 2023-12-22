@@ -15,16 +15,16 @@ public class ValueConverter {
         JSON_CONVERTER.configure(Collections.singletonMap("schemas.enable", "false"), false);
     }
 
-    public String convert(SinkRecord record) {
+    public byte[] convert(SinkRecord record) {
+
         if (record.value() == null) {
             return null;
         } else if (record.value() instanceof byte[]) {
-            return new String((byte[]) record.value(), StandardCharsets.UTF_8);
+            return (byte[]) record.value();
         } else if (record.value() instanceof String) {
-            return (String) record.value();
+            return ((String) record.value()).getBytes(StandardCharsets.UTF_8);
         } else {
-            byte[] bytes = JSON_CONVERTER.fromConnectData(record.topic(), record.valueSchema(), record.value());
-            return new String(bytes, StandardCharsets.UTF_8);
+            return JSON_CONVERTER.fromConnectData(record.topic(), record.valueSchema(), record.value());
         }
     }
 }
