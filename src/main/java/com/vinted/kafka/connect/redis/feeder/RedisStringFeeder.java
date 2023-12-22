@@ -47,9 +47,6 @@ public class RedisStringFeeder implements IFeeder {
                 byte[] key = keyConverter.convert(record);
                 byte[] value = valueConverter.convert(record);
 
-                System.out.println("DEBUG: " + key + " : " + value);
-                log.error("DEBUG: " + key + " : " + value);
-
                 if (value == null) {
                     delete(key, pipeline);
                 } else {
