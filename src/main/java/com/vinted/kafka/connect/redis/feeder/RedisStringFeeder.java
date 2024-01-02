@@ -1,7 +1,7 @@
 package com.vinted.kafka.connect.redis.feeder;
 
 import com.vinted.kafka.connect.redis.RedisSinkConnectorConfig;
-import com.vinted.kafka.connect.redis.RedisSinkTask;
+import com.vinted.kafka.connect.redis.RedisSinkConnectorException;
 import com.vinted.kafka.connect.redis.converter.KeyConverter;
 import com.vinted.kafka.connect.redis.converter.ValueConverter;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -15,10 +15,7 @@ import redis.clients.jedis.params.SetParams;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class RedisStringFeeder implements IFeeder {
     private static final Logger log = LoggerFactory.getLogger(RedisStringFeeder.class);
@@ -45,10 +42,12 @@ public class RedisStringFeeder implements IFeeder {
 
     @Override
     public void feed(Collection<SinkRecord> collection) {
+        List<Object> result = null;
+
         try (PipelineBase pipeline = config.isRedisPipelined() ? redis.pipelined() : null) {
             SetParams params = getSetParams();
 
-            Stream<Object> result = collection.stream().map(record -> {
+            result = collection.stream().map(record -> {
                 byte[] key = keyConverter.convert(record);
                 byte[] value = valueConverter.convert(record);
 
@@ -59,18 +58,25 @@ public class RedisStringFeeder implements IFeeder {
                     System.out.println("DEBUG (cluster: " + config.isRedisCluster() + ") : " + new String(key, StandardCharsets.UTF_8) + " : " + new String(value, StandardCharsets.UTF_8));
                     return set(key, value, params, pipeline);
                 }
-            });
-            
-            if (pipeline!= null) {
+            }).collect(Collectors.toList());
+
+            if (pipeline != null) {
                 pipeline.sync();
             }
-            verifyResults(result.collect(Collectors.toList()));
         }
+
+        verifyResults(result);
     }
 
     private void verifyResults(List<Object> result) {
-        // TODO: verify results
-        System.out.println(result.stream().map(Object::toString).collect(Collectors.toList()));
+        List<Object> failures = result.stream()
+                .map(RedisStringFeeder::toResponseString)
+                .filter(RedisStringFeeder::isFailureResponse)
+                .collect(Collectors.toList());
+
+        if (!failures.isEmpty()) {
+            throw new RedisSinkConnectorException("Failed to SET keys: " + failures);
+        }
     }
 
     private Object set(byte[] key, byte[] value, SetParams params, PipelineBase pipeline) {
@@ -97,5 +103,17 @@ public class RedisStringFeeder implements IFeeder {
         }
 
         return params;
+    }
+
+    private static Object toResponseString(Object c) {
+        if (c instanceof Response) {
+            return ((Response<?>) c).get().toString();
+        } else {
+            return c;
+        }
+    }
+
+    private static boolean isFailureResponse(Object c) {
+        return !"OK".equals(c);
     }
 }
