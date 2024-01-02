@@ -12,8 +12,13 @@ import redis.clients.jedis.Response;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.params.SetParams;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RedisStringFeeder implements IFeeder {
     private static final Logger log = LoggerFactory.getLogger(RedisStringFeeder.class);
@@ -43,32 +48,44 @@ public class RedisStringFeeder implements IFeeder {
         try (PipelineBase pipeline = config.isRedisPipelined() ? redis.pipelined() : null) {
             SetParams params = getSetParams();
 
-            collection.forEach(record -> {
+            Stream<Object> result = collection.stream().map(record -> {
                 byte[] key = keyConverter.convert(record);
                 byte[] value = valueConverter.convert(record);
 
                 if (value == null) {
-                    delete(key, pipeline);
+                    System.out.println("DEBUG EX (cluster: " + config.isRedisCluster() + ") : " + new String(key, StandardCharsets.UTF_8));
+                    return delete(key, pipeline);
                 } else {
-                    set(key, value, params, pipeline);
+                    System.out.println("DEBUG (cluster: " + config.isRedisCluster() + ") : " + new String(key, StandardCharsets.UTF_8) + " : " + new String(value, StandardCharsets.UTF_8));
+                    return set(key, value, params, pipeline);
                 }
             });
+            
+            if (pipeline!= null) {
+                pipeline.sync();
+            }
+            verifyResults(result.collect(Collectors.toList()));
         }
     }
 
-    private void set(byte[] key, byte[] value, SetParams params, PipelineBase pipeline) {
+    private void verifyResults(List<Object> result) {
+        // TODO: verify results
+        System.out.println(result.stream().map(Object::toString).collect(Collectors.toList()));
+    }
+
+    private Object set(byte[] key, byte[] value, SetParams params, PipelineBase pipeline) {
         if (pipeline != null) {
-            pipeline.set(key, value, params);
+            return pipeline.set(key, value, params);
         } else {
-            redis.set(key, value, params);
+            return redis.set(key, value, params);
         }
     }
 
-    private void delete(byte[] key, PipelineBase pipeline) {
+    private Object delete(byte[] key, PipelineBase pipeline) {
         if (pipeline != null) {
-            pipeline.expire(key, 1);
+            return pipeline.expire(key, 1);
         } else {
-            redis.expire(key, 1);
+            return redis.expire(key, 1);
         }
     }
 
