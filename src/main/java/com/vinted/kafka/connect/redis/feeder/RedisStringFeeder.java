@@ -1,5 +1,6 @@
 package com.vinted.kafka.connect.redis.feeder;
 
+import com.google.common.collect.ImmutableSet;
 import com.vinted.kafka.connect.redis.RedisSinkConnectorConfig;
 import com.vinted.kafka.connect.redis.RedisSinkConnectorException;
 import com.vinted.kafka.connect.redis.converter.KeyConverter;
@@ -12,9 +13,9 @@ import redis.clients.jedis.Response;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.params.SetParams;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RedisStringFeeder implements IFeeder {
@@ -23,6 +24,7 @@ public class RedisStringFeeder implements IFeeder {
     private final KeyConverter keyConverter;
     private final UnifiedJedis redis;
     private final RedisSinkConnectorConfig config;
+    private static final Set<Object> SUCCESS_RESPONSES = ImmutableSet.of("OK", 1L, 0L);
 
     public RedisStringFeeder(
             UnifiedJedis redis,
@@ -52,10 +54,8 @@ public class RedisStringFeeder implements IFeeder {
                 byte[] value = valueConverter.convert(record);
 
                 if (value == null) {
-                    System.out.println("DEBUG EX (cluster: " + config.isRedisCluster() + ") : " + new String(key, StandardCharsets.UTF_8));
                     return delete(key, pipeline);
                 } else {
-                    System.out.println("DEBUG (cluster: " + config.isRedisCluster() + ") : " + new String(key, StandardCharsets.UTF_8) + " : " + new String(value, StandardCharsets.UTF_8));
                     return set(key, value, params, pipeline);
                 }
             }).collect(Collectors.toList());
@@ -107,13 +107,13 @@ public class RedisStringFeeder implements IFeeder {
 
     private static Object toResponseString(Object c) {
         if (c instanceof Response) {
-            return ((Response<?>) c).get().toString();
+            return ((Response<?>) c).get();
         } else {
             return c;
         }
     }
 
     private static boolean isFailureResponse(Object c) {
-        return !"OK".equals(c);
+        return !SUCCESS_RESPONSES.contains(c);
     }
 }
