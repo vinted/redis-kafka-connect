@@ -13,6 +13,7 @@ import org.mockito.Mockito;
 import org.junit.jupiter.api.Test;
 
 import redis.clients.jedis.PipelineBase;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.params.SetParams;
 
@@ -30,6 +31,8 @@ public class RedisStringFeederTest {
     private ValueConverter valueConverter;
     private byte[] convertedKeyBytes;
     private byte[] convertedValueBytes;
+    private Response response;
+    private Response responseExpire;
 
     @BeforeEach
     public void setUp() {
@@ -39,7 +42,8 @@ public class RedisStringFeederTest {
         this.pipeline = mock(PipelineBase.class);
         this.convertedKeyBytes = "convertedKey".getBytes(StandardCharsets.UTF_8);
         this.convertedValueBytes = "convertedValue".getBytes(StandardCharsets.UTF_8);
-        when(jedis.pipelined()).thenReturn(pipeline);
+        this.response = mock(Response.class);
+        this.responseExpire = mock(Response.class);
     }
 
     @Test
@@ -51,6 +55,7 @@ public class RedisStringFeederTest {
 
         when(keyConverter.convert(record)).thenReturn(convertedKeyBytes);
         when(valueConverter.convert(record)).thenReturn(convertedValueBytes);
+        when(jedis.set(any(), (byte[]) any(), any())).thenReturn("OK");
 
         RedisStringFeeder feeder = new RedisStringFeeder(jedis, config, keyConverter, valueConverter);
 
@@ -68,6 +73,7 @@ public class RedisStringFeederTest {
 
         when(keyConverter.convert(record)).thenReturn(convertedKeyBytes);
         when(valueConverter.convert(record)).thenReturn(null);
+        when(jedis.expire((byte[]) any(), eq(1))).thenReturn(1L);
 
         RedisStringFeeder feeder = new RedisStringFeeder(jedis, config, keyConverter, valueConverter);
 
@@ -85,8 +91,11 @@ public class RedisStringFeederTest {
                 .build();
         RedisSinkConnectorConfig config = new RedisSinkConnectorConfig(props);
 
+        when(jedis.pipelined()).thenReturn(pipeline);
         when(keyConverter.convert(record)).thenReturn(convertedKeyBytes);
         when(valueConverter.convert(record)).thenReturn(convertedValueBytes);
+        when(response.get()).thenReturn("OK");
+        when(pipeline.set(any(), (byte[]) any(), any())).thenReturn(this.response);
 
         RedisStringFeeder feeder = new RedisStringFeeder(jedis, config, keyConverter, valueConverter);
 
@@ -104,8 +113,11 @@ public class RedisStringFeederTest {
                 .build();
         RedisSinkConnectorConfig config = new RedisSinkConnectorConfig(props);
 
+        when(jedis.pipelined()).thenReturn(pipeline);
         when(keyConverter.convert(record)).thenReturn(convertedKeyBytes);
         when(valueConverter.convert(record)).thenReturn(null);
+        when(responseExpire.get()).thenReturn(0L);
+        when(pipeline.expire((byte[]) any(), eq(1L))).thenReturn(this.responseExpire);
 
         RedisStringFeeder feeder = new RedisStringFeeder(jedis, config, keyConverter, valueConverter);
 

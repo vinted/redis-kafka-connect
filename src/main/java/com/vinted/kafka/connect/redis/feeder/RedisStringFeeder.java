@@ -1,7 +1,8 @@
 package com.vinted.kafka.connect.redis.feeder;
 
+import com.google.common.collect.ImmutableSet;
 import com.vinted.kafka.connect.redis.RedisSinkConnectorConfig;
-import com.vinted.kafka.connect.redis.RedisSinkTask;
+import com.vinted.kafka.connect.redis.RedisSinkConnectorException;
 import com.vinted.kafka.connect.redis.converter.KeyConverter;
 import com.vinted.kafka.connect.redis.converter.ValueConverter;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -13,7 +14,9 @@ import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.params.SetParams;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RedisStringFeeder implements IFeeder {
     private static final Logger log = LoggerFactory.getLogger(RedisStringFeeder.class);
@@ -21,6 +24,7 @@ public class RedisStringFeeder implements IFeeder {
     private final KeyConverter keyConverter;
     private final UnifiedJedis redis;
     private final RedisSinkConnectorConfig config;
+    private static final Set<Object> SUCCESS_RESPONSES = ImmutableSet.of("OK", 1L, 0L);
 
     public RedisStringFeeder(
             UnifiedJedis redis,
@@ -40,35 +44,54 @@ public class RedisStringFeeder implements IFeeder {
 
     @Override
     public void feed(Collection<SinkRecord> collection) {
+        List<Object> result = null;
+
         try (PipelineBase pipeline = config.isRedisPipelined() ? redis.pipelined() : null) {
             SetParams params = getSetParams();
 
-            collection.forEach(record -> {
+            result = collection.stream().map(record -> {
                 byte[] key = keyConverter.convert(record);
                 byte[] value = valueConverter.convert(record);
 
                 if (value == null) {
-                    delete(key, pipeline);
+                    return delete(key, pipeline);
                 } else {
-                    set(key, value, params, pipeline);
+                    return set(key, value, params, pipeline);
                 }
-            });
+            }).collect(Collectors.toList());
+
+            if (pipeline != null) {
+                pipeline.sync();
+            }
+        }
+
+        verifyResults(result);
+    }
+
+    private void verifyResults(List<Object> result) {
+        List<Object> failures = result.stream()
+                .map(RedisStringFeeder::toResponseString)
+                .filter(RedisStringFeeder::isFailureResponse)
+                .collect(Collectors.toList());
+
+        if (!failures.isEmpty()) {
+            throw new RedisSinkConnectorException("Failed to SET keys: " + failures);
         }
     }
 
-    private void set(byte[] key, byte[] value, SetParams params, PipelineBase pipeline) {
+    private Object set(byte[] key, byte[] value, SetParams params, PipelineBase pipeline) {
         if (pipeline != null) {
-            pipeline.set(key, value, params);
+            return pipeline.set(key, value, params);
         } else {
-            redis.set(key, value, params);
+            return redis.set(key, value, params);
         }
     }
 
-    private void delete(byte[] key, PipelineBase pipeline) {
+    private Object delete(byte[] key, PipelineBase pipeline) {
         if (pipeline != null) {
-            pipeline.expire(key, 1);
+            return pipeline.expire(key, 1);
         } else {
-            redis.expire(key, 1);
+            return redis.expire(key, 1);
         }
     }
 
@@ -80,5 +103,17 @@ public class RedisStringFeeder implements IFeeder {
         }
 
         return params;
+    }
+
+    private static Object toResponseString(Object c) {
+        if (c instanceof Response) {
+            return ((Response<?>) c).get();
+        } else {
+            return c;
+        }
+    }
+
+    private static boolean isFailureResponse(Object c) {
+        return !SUCCESS_RESPONSES.contains(c);
     }
 }
